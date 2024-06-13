@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { NextResponse } from 'next/server';
 import Blog from '../../../../../lib/modals/blog';
+import connect from '@/lib/db';
 
 export const GET = async (request: Request, context: { params: any }) => {
   const BlogId = context.params.blog;
@@ -30,6 +31,8 @@ export const GET = async (request: Request, context: { params: any }) => {
         { status: 400 }
       );
     }
+    await connect();
+
     const blogResponse = await Blog.findOne({
       _id: BlogId,
       userId: new Types.ObjectId(userId),
@@ -47,5 +50,48 @@ export const GET = async (request: Request, context: { params: any }) => {
     return new NextResponse(JSON.stringify('error ' + error.message), {
       status: 500,
     });
+  }
+};
+
+export const PATCH = async (request: Request, context: { params: any }) => {
+  const blogId = context.params.blog;
+  try {
+    const body = await request.json();
+
+    console.log(blogId, 'blogId from  the console');
+
+    if (!blogId || !Types.ObjectId.isValid(blogId)) {
+      return new NextResponse(
+        JSON.stringify({
+          ErrorMessage: 'blogId is not a found or invalid blog ID',
+        }),
+        { status: 400 }
+      );
+    }
+    await connect();
+
+    const { description, title } = body;
+    const checkblogId = await Blog.findOne({ _id: blogId });
+    if (!checkblogId) {
+      return new NextResponse(
+        JSON.stringify({ ErrorMessage: 'blog not found in the database' }),
+        { status: 404 }
+      );
+    }
+    const updatedBlog = await Blog.findOneAndUpdate(
+      { _id: blogId },
+      { description, title },
+      { new: true }
+    );
+    if (updatedBlog) {
+      return new NextResponse(JSON.stringify(updatedBlog), { status: 200 });
+    } else {
+      return new NextResponse(JSON.stringify({ message: 'Blog not updated' }), {
+        status: 404,
+      });
+    }
+  } catch (error: any) {
+    console.log(error, 'Error');
+    return new NextResponse(JSON.stringify('Error' + error.message));
   }
 };
