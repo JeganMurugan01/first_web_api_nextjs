@@ -30,6 +30,10 @@ export const POST = async (request: Request) => {
           { status: 401 }
         );
       }
+    } else {
+      return new NextResponse(JSON.stringify({ message: 'user not foud' }), {
+        status: 401,
+      });
     }
 
     let ACCESS_TOKEN = jwt.sign({ email }, privateKey!, {

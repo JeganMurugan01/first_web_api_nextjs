@@ -8,7 +8,11 @@ export const config = {
 export const middleware = async (request: Request) => {
   const result = await authMiddleware(request);
   console.log(result, 'result');
-  if (result !== true) {
+  if (
+    result !== true &&
+    !request.url.includes('/api/login') &&
+    !request.url.includes('/api/users')
+  ) {
     return new NextResponse(JSON.stringify({ Error: 'unauthorized' }), {
       status: 401,
     });
