@@ -9,14 +9,16 @@ export const GET = async (request: Request) => {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const categoryId = searchParams.get('categoryId');
-
+    const searchKeyWord = searchParams.get('keyword') as string;
+    const sort = searchParams.get('sort') as string;
+    const limit = searchParams.get('limit') as any;
+    const page = searchParams.get('page') as any;
     if (!userId || !Types.ObjectId.isValid(userId)) {
       return new NextResponse(
         JSON.stringify({ Message: 'userId is not found or invalid userId' }),
         { status: 400 }
       );
     }
-
     if (!categoryId || !Types.ObjectId.isValid(categoryId)) {
       return new NextResponse(
         JSON.stringify({
@@ -35,11 +37,24 @@ export const GET = async (request: Request) => {
       });
     }
 
-    const filter = {
+    const filter: any = {
       userId: userId,
       categoryId: categoryId,
     };
-    const blogResponse = await Blog.find(filter);
+    if (searchKeyWord) {
+      filter.$or = [
+        { title: { $regex: searchKeyWord, $options: 'i' } },
+        {
+          description: { $regex: searchKeyWord, $options: 'i' },
+        },
+      ];
+    }
+    const blogResponse = await Blog.find(filter)
+      .sort({
+        createdAt: sort === 'desc' ? -1 : 1,
+      })
+      .limit(limit)
+      .skip((page - 1) * limit);
 
     if (blogResponse) {
       return new NextResponse(JSON.stringify({ blogResponse }), {
