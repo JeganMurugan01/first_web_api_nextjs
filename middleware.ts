@@ -11,7 +11,7 @@ export const middleware = async (request: Request) => {
   if (
     result !== true &&
     !request.url.includes('/api/login') &&
-    !request.url.includes('/api/users')
+    !request.url.includes('/api/user')
   ) {
     return new NextResponse(JSON.stringify({ Error: 'unauthorized' }), {
       status: 401,
